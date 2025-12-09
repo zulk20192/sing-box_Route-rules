@@ -3,6 +3,7 @@
   "rules": [
     {
       "domain_suffix": [
+        "kompas.com",
         "doubleclick.net",
         "googlesyndication.com",
         "googleadservices.com",
