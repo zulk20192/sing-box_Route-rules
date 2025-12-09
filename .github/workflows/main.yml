@@ -3,8 +3,8 @@ name: Build ADS Rule (Sing-Box)
 on:
   push:
     paths:
-      - "rules/ads.json"   # jika ads.json berubah, workflow otomatis jalan
-  workflow_dispatch:        # bisa dijalankan manual
+      - "rules/ads.json"
+  workflow_dispatch:
 
 jobs:
   build:
@@ -12,20 +12,22 @@ jobs:
 
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install sing-box
         run: |
           sudo apt update
-          wget -O sing-box.deb https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.deb
-          sudo dpkg -i sing-box.deb
+          wget -O sing-box.tar.gz https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz
+          tar -xvf sing-box.tar.gz
+          sudo mv sing-box-linux-amd64/sing-box /usr/local/bin/sing-box
+          sudo chmod +x /usr/local/bin/sing-box
 
       - name: Build ADS.srs
         run: |
           mkdir -p output
           sing-box rule-set compile rules/ads.json -o output/ads.srs
 
-      - name: Upload ADS.srs Artifacts
+      - name: Upload ADS.srs Artifact
         uses: actions/upload-artifact@v4
         with:
           name: ads-rule
