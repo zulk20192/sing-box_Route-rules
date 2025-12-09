@@ -1,43 +1,54 @@
-name: Build ADS Rule (Sing-Box)
+name: Build Sing-box Rules
 
 on:
-  push:
-    paths:
-      - "rules/ads.json"
   workflow_dispatch:
+  push:
+    branches: ["main"]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repo
-        uses: actions/checkout@v4
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-      - name: Install sing-box
-        run: |
-          sudo apt update
-          wget -O sing-box.tar.gz https://github.com/SagerNet/sing-box/releases/latest/download/sing-box-linux-amd64.tar.gz
-          tar -xvf sing-box.tar.gz
-          sudo mv sing-box-linux-amd64/sing-box /usr/local/bin/sing-box
-          sudo chmod +x /usr/local/bin/sing-box
+    - name: Install dependencies
+      run: sudo apt update
 
-      - name: Build ADS.srs
-        run: |
-          mkdir -p output
-          sing-box rule-set compile rules/ads.json -o output/ads.srs
+    # AMBIL URL SING BOX TERBARU
+    - name: Get latest Sing-box download URL
+      id: geturl
+      run: |
+        URL=$(curl -s https://api.github.com/repos/SagerNet/sing-box/releases/latest \
+          | grep browser_download_url \
+          | grep linux-amd64.tar.gz \
+          | cut -d '"' -f 4)
+        echo "URL=$URL" >> $GITHUB_OUTPUT
 
-      - name: Upload ADS.srs Artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: ads-rule
-          path: output/ads.srs
+    # DOWNLOAD FILE
+    - name: Download Sing-box
+      run: |
+        wget "${{ steps.geturl.outputs.URL }}"
+        ls -lah
 
-      - name: Commit & Push ADS.srs
-        run: |
-          git config user.name "github-actions"
-          git config user.email "actions@github.com"
-          cp output/ads.srs rules/
-          git add rules/ads.srs || true
-          git commit -m "Auto build ADS.srs" || true
-          git push || true
+    # EXTRACT
+    - name: Extract Sing-box
+      run: |
+        tar -xvf *.tar.gz
+        ls -lah
+
+    # CONTOH: Jalankan Sing-box buat convert rules (opsional)
+    - name: Run Sing-box (contoh)
+      run: |
+        chmod +x sing-box
+        ./sing-box version
+
+    # UPLOAD ARTIFACT
+    - name: Upload output
+      uses: actions/upload-artifact@v4
+      with:
+        name: hasil-singbox
+        path: |
+          .
+        retention-days: 7
