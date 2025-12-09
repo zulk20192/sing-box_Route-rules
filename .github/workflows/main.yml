@@ -12,6 +12,8 @@ jobs:
     steps:
     - name: Checkout repo
       uses: actions/checkout@v4
+      with:
+        persist-credentials: true
 
     - name: Install dependencies
       run: sudo apt update
@@ -26,8 +28,7 @@ jobs:
         echo "URL=$URL" >> $GITHUB_OUTPUT
 
     - name: Download Sing-box
-      run: |
-        wget "${{ steps.geturl.outputs.URL }}"
+      run: wget "${{ steps.geturl.outputs.URL }}"
 
     - name: Extract Sing-box
       run: |
@@ -35,15 +36,29 @@ jobs:
         DIR=$(find . -type d -name "sing-box*" | head -n 1)
         echo "DIR=$DIR" >> $GITHUB_ENV
 
-    - name: Convert JSON to SRS
+    - name: Compile all JSON to SRS in root
       run: |
-        mkdir -p output
-        "$DIR/sing-box" rule-set compile ads.json -o output/ads.srs
-        ls -lah output
+        for FILE in *.json; do
+          NAME=$(basename "$FILE" .json)
+          echo "Compile: $FILE → $NAME.srs"
+          "${{ env.DIR }}/sing-box" rule-set compile "$FILE" -o "$NAME.srs"
+        done
+        ls -lah
 
-    - name: Upload output
+    - name: Upload all .srs as artifact
       uses: actions/upload-artifact@v4
       with:
         name: hasil-singbox
-        path: output
+        path: "*.srs"
         retention-days: 7
+
+    - name: Commit & push SRS to repo
+      run: |
+        git config --global user.email "github-actions@github.com"
+        git config --global user.name "GitHub Actions"
+
+        git add *.srs
+        git commit -m "Update SRS file(s) [auto]"
+        git push
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
