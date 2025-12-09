@@ -16,7 +16,6 @@ jobs:
     - name: Install dependencies
       run: sudo apt update
 
-    # AMBIL URL SING BOX TERBARU
     - name: Get latest Sing-box download URL
       id: geturl
       run: |
@@ -26,25 +25,21 @@ jobs:
           | cut -d '"' -f 4)
         echo "URL=$URL" >> $GITHUB_OUTPUT
 
-    # DOWNLOAD FILE
     - name: Download Sing-box
       run: |
         wget "${{ steps.geturl.outputs.URL }}"
-        ls -lah
 
-    # EXTRACT
     - name: Extract Sing-box
       run: |
         tar -xvf *.tar.gz
-        ls -lah
+        DIR=$(find . -type d -name "sing-box*" | head -n 1)
+        echo "DIR=$DIR" >> $GITHUB_ENV
 
-    # CONTOH: Jalankan Sing-box buat convert rules (opsional)
     - name: Run Sing-box (contoh)
       run: |
-        chmod +x sing-box
-        ./sing-box version
+        chmod +x "$DIR/sing-box"
+        "$DIR/sing-box" version
 
-    # UPLOAD ARTIFACT
     - name: Upload output
       uses: actions/upload-artifact@v4
       with:
