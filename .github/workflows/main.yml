@@ -35,15 +35,15 @@ jobs:
         DIR=$(find . -type d -name "sing-box*" | head -n 1)
         echo "DIR=$DIR" >> $GITHUB_ENV
 
-    - name: Run Sing-box (contoh)
+    - name: Convert JSON to SRS
       run: |
-        chmod +x "$DIR/sing-box"
-        "$DIR/sing-box" version
+        mkdir -p output
+        "$DIR/sing-box" rule-set compile rules/ads.json -o output/ads.srs
+        ls -lah output
 
     - name: Upload output
       uses: actions/upload-artifact@v4
       with:
         name: hasil-singbox
-        path: |
-          .
+        path: output
         retention-days: 7
